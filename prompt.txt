@@ -1,0 +1,69 @@
+Basandoti sullo starter kit Ably + Next.js che utilizza WebSocket real-time, token authentication, pub/sub, presence e history, crea un'applicazione di chat completa con le seguenti caratteristiche:
+
+**REQUISITI TECNICI:**
+- Mantieni il core real-time con Ably (WebSocket, pub/sub, presence)
+- Integra Supabase come backend completo (auth + database + storage)
+- Utilizza Next.js 13+ con App Router
+
+**FUNZIONALITÀ RICHIESTE:**
+
+1. **AUTENTICAZIONE UTENTI:**
+   - Login/registrazione con Supabase Auth
+   - Profili utente con avatar, nome, stato online
+   - Integrazione con Ably presence per mostrare utenti online
+
+2. **CHAT REAL-TIME:**
+   - Chat room multiple o chat 1-to-1
+   - Messaggi testo in real-time tramite Ably
+   - Storico messaggi caricato da Supabase PostgreSQL
+   - Indicatori di "sta scrivendo..." e "messaggio letto"
+
+3. **GESTIONE MEDIA:**
+   - Upload di immagini, video, audio, documenti tramite Supabase Storage
+   - Preview anteprima media nella chat
+   - Download file condivisi
+   - Limiti di dimensione e tipi di file consentiti
+
+4. **DATABASE SUPABASE:**
+   - Tabelle: users, messages, chat_rooms, media_attachments
+   - Salvataggio permanente di tutti i messaggi
+   - Metadata dei media (url, tipo, dimensione, utente, timestamp)
+   - Relazioni tra utenti e messaggi
+
+5. **INTERFACCIA UTENTE:**
+   - Lista chat/contatti con ultimo messaggio
+   - Finestra chat con messaggi storici + real-time
+   - Barra di input con emoji, upload media, invio messaggi
+   - Notifiche per nuovi messaggi
+   - Responsive design mobile-friendly
+
+6. **FUNZIONALITÀ AVANZATE:**
+   - Stato di lettura messaggi (spunti blu)
+   - Eliminazione/modifica messaggi (con permessi)
+   - Ricerca messaggi
+   - Temi light/dark
+
+**STRUTTURA CARTELLE SUGGERITA:**
+- /app - Next.js App Router
+- /components - Componenti React riutilizzabili
+- /lib - Configurazioni Ably, Supabase, utilities
+- /hooks - Custom hooks per chat, media, auth
+- /types - Interfacce TypeScript
+
+**TECNOLOGIE DA INTEGRARE:**
+- Ably per real-time messaging
+- Supabase Auth per autenticazione
+- Supabase Database (PostgreSQL) per storage permanente
+- Supabase Storage per media files
+- TailwindCSS per styling
+- React Hook Form per form validation
+- React Query per data fetching
+
+Fornisci il codice completo organizzato per cartelle, con particolare attenzione a:
+1. Integrazione sicura tra Ably e Supabase
+2. Gestione errori e retry per upload media
+3. Ottimizzazione performance caricamento media
+4. Sicurezza accessi ai file in Supabase Storage
+5. Tipizzazione TypeScript completa
+
+Il risultato deve essere un'applicazione chat production-ready che combina la velocità di Ably con la completezza di Supabase.
