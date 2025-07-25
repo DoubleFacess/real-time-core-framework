@@ -4,6 +4,8 @@ Basandoti sullo starter kit Ably + Next.js che utilizza WebSocket real-time, tok
 - Mantieni il core real-time con Ably (WebSocket, pub/sub, presence)
 - Integra Supabase come backend completo (auth + database + storage)
 - Utilizza Next.js 13+ con App Router
+- Implementa il client chat come componente React riutilizzabile
+- Mantieni la struttura pages e components esistente dello starter kit
 
 **FUNZIONALITÀ RICHIESTE:**
 
@@ -30,40 +32,60 @@ Basandoti sullo starter kit Ably + Next.js che utilizza WebSocket real-time, tok
    - Metadata dei media (url, tipo, dimensione, utente, timestamp)
    - Relazioni tra utenti e messaggi
 
-5. **INTERFACCIA UTENTE:**
-   - Lista chat/contatti con ultimo messaggio
-   - Finestra chat con messaggi storici + real-time
-   - Barra di input con emoji, upload media, invio messaggi
-   - Notifiche per nuovi messaggi
-   - Responsive design mobile-friendly
+5. **CLIENT CHAT - COMPONENTE REACT:**
+   - Crea un componente ChatClient riutilizzabile
+   - Deve essere compatibile con la struttura pages/components esistente
+   - Integra perfettamente con il layout mostrato nell'immagine allegata
+   - Componente modulare e configurabile per diverse tipologie di chat
 
-6. **FUNZIONALITÀ AVANZATE:**
+6. **LAYOUT E UI (basato sull'immagine allegata):**
+   - Layout a colonne: sidebar contatti + area chat principale
+   - Sidebar sinistra: lista utenti/contatti con stato online e ultimo messaggio
+   - Area superiore chat: header con nome contatto e stato
+   - Area centrale: finestra messaggi con scroll automatico
+   - Area inferiore: barra di input con emoji picker, upload media, invio messaggi
+   - Supporto per messaggi testo e media con preview integrata
+   - Design moderno e responsive
+
+7. **INTERAZIONI UTENTE:**
+   - Selezione contatto per aprire la chat
+   - Invio messaggi con Enter o click su invio
+   - Upload drag & drop di file
+   - Anteprima media prima dell'invio
+   - Stato di caricamento per upload in corso
+
+8. **FUNZIONALITÀ AVANZATE:**
    - Stato di lettura messaggi (spunti blu)
    - Eliminazione/modifica messaggi (con permessi)
-   - Ricerca messaggi
+   - Ricerca messaggi e contatti
    - Temi light/dark
+   - Notifiche desktop per nuovi messaggi
 
 **STRUTTURA CARTELLE SUGGERITA:**
-- /app - Next.js App Router
-- /components - Componenti React riutilizzabili
+- /app - Next.js App Router (mantieni struttura esistente)
+- /components/chat - Componenti specifici per la chat (ChatClient, MessageList, InputArea, ContactList, ecc.)
+- /components/ui - Componenti UI generici (Button, Input, Avatar, ecc.)
 - /lib - Configurazioni Ably, Supabase, utilities
 - /hooks - Custom hooks per chat, media, auth
 - /types - Interfacce TypeScript
+- /styles - CSS/SCSS personalizzati per il layout
 
 **TECNOLOGIE DA INTEGRARE:**
 - Ably per real-time messaging
 - Supabase Auth per autenticazione
 - Supabase Database (PostgreSQL) per storage permanente
 - Supabase Storage per media files
-- TailwindCSS per styling
+- TailwindCSS per styling (o CSS modules se preferito)
 - React Hook Form per form validation
-- React Query per data fetching
+- React Query o SWR per data fetching
 
 Fornisci il codice completo organizzato per cartelle, con particolare attenzione a:
-1. Integrazione sicura tra Ably e Supabase
-2. Gestione errori e retry per upload media
-3. Ottimizzazione performance caricamento media
-4. Sicurezza accessi ai file in Supabase Storage
-5. Tipizzazione TypeScript completa
+1. Implementazione del componente ChatClient modulare e riutilizzabile
+2. Integrazione sicura tra Ably e Supabase
+3. Gestione errori e retry per upload media
+4. Ottimizzazione performance caricamento media
+5. Sicurezza accessi ai file in Supabase Storage
+6. Tipizzazione TypeScript completa
+7. Compatibilità con layout a colonne dell'immagine allegata
 
-Il risultato deve essere un'applicazione chat production-ready che combina la velocità di Ably con la completezza di Supabase.
+Il risultato deve essere un'applicazione chat production-ready che combina la velocità di Ably con la completezza di Supabase, con un client chat ben strutturato che si integra perfettamente nella struttura Next.js esistente.
