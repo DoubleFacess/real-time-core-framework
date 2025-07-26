@@ -1,4 +1,11 @@
-import { User } from './ChatLayout';
+interface User {
+  id: string;
+  name: string;
+  avatar?: string;
+  lastMessage?: string;
+  time?: string;
+  unread?: number;
+}
 
 interface ConversationListProps {
   conversations: User[];

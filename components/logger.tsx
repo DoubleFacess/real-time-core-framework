@@ -13,6 +13,8 @@ export type LoggingProps = {
   displayHeader: boolean
 }
 
+import Image from 'next/image';
+
 export default function Logger({ logEntries, displayHeader }: LoggingProps) {
   return (
     <div className="flex flex-col justify-start items-start gap-4">
@@ -24,9 +26,15 @@ export default function Logger({ logEntries, displayHeader }: LoggingProps) {
       <div className="flex flex-col justify-start items-start rounded-lg bg-gray-900">
         <div className="flex flex-row justify-start items-center pt-3 pr-2 pb-3 pl-2 border-slate-800 border-b border-solid w-[752px] h-10">
           <div className="flex flex-row justify-start items-start gap-1.5 pt-2.5 pr-2.5 pb-2.5 pl-2.5 h-7">
-            <img width="10px" height="10px" src="/assets/RedButton.svg" alt="Red" />
-            <img width="10px" height="10px" src="/assets/YellowButton.svg" alt="Yellow" />
-            <img width="10px" height="10px" src="/assets/GreenButton.svg" alt="Green" />
+            <div className="relative w-2.5 h-2.5">
+              <Image src="/assets/RedButton.svg" alt="Red" fill className="object-contain" />
+            </div>
+            <div className="relative w-2.5 h-2.5">
+              <Image src="/assets/YellowButton.svg" alt="Yellow" fill className="object-contain" />
+            </div>
+            <div className="relative w-2.5 h-2.5">
+              <Image src="/assets/GreenButton.svg" alt="Green" fill className="object-contain" />
+            </div>
           </div>
         </div>
 

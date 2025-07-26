@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { FiArrowLeft, FiPaperclip, FiSend, FiSmile } from 'react-icons/fi';
 import { BsCheck2All } from 'react-icons/bs';
+import Image from 'next/image';
 import { chatService, ChatMessage, MediaFile } from '@/services/chatService';
 
 interface ChatWindowProps {
@@ -193,13 +194,18 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
               {msg.media && msg.media.map((media, mediaIndex) => (
                 <div key={`${msg.id}-media-${mediaIndex}`} className="mt-2">
                   {media.type === 'image' ? (
-                    <img 
-                      key={`${msg.id}-img-${mediaIndex}`}
-                      src={media.url} 
-                      alt={media.name || 'Image'} 
-                      className="max-w-full h-auto rounded"
-                      onClick={() => window.open(media.url, '_blank')}
-                    />
+                    <div className="relative w-full h-48 md:h-64 rounded overflow-hidden">
+                      <Image
+                        key={`${msg.id}-img-${mediaIndex}`}
+                        src={media.url}
+                        alt={media.name || 'Image'}
+                        fill
+                        className="object-cover cursor-pointer"
+                        onClick={() => window.open(media.url, '_blank')}
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        unoptimized={!media.url.startsWith('/')}
+                      />
+                    </div>
                   ) : media.type === 'video' ? (
                     <video 
                       key={`${msg.id}-video-${mediaIndex}`}
