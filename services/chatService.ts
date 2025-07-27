@@ -26,12 +26,12 @@ class ChatService {
 
   private constructor() {
     try {
-      if (!process.env.ABLY_API_KEY) {
-        throw new Error('ABLY_API_KEY is not set in environment variables');
+      if (!process.env.NEXT_PUBLIC_ABLY_API_KEY) {
+        throw new Error('NEXT_PUBLIC_ABLY_API_KEY is not set in environment variables');
       }
 
       // Initialize Ably with just the API key to avoid type issues
-      this.ably = new Ably.Realtime(process.env.ABLY_API_KEY as string);
+      this.ably = new Ably.Realtime(process.env.NEXT_PUBLIC_ABLY_API_KEY as string);
       
       // Use the same channel as the pub-sub page
       this.channel = this.ably.channels.get('status-updates');
