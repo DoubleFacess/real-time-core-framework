@@ -32,7 +32,17 @@ function PubSubMessages() {
   const [logs, setLogs] = useState<Array<LogEntry>>([])
 
   const { channel } = useChannel("status-updates", (message: Ably.Message) => {
-    setLogs(prev => [...prev, new LogEntry(`✉️ event name: ${message.name} text: ${message.data.text}`)])
+    let eventName = message.name;
+    let text = message.data?.text ?? message.data?.data?.text ?? JSON.stringify(message.data);
+    let media = message.data?.media ?? message.data?.data?.media;
+    if (media && Array.isArray(media) && media.length > 0) {
+      eventName = 'media-event';
+      text = media.map(m => `media: ${m.type}, name: ${m.name}, size: ${m.size}, url: ${m.url}`).join(' | ');
+    }
+    setLogs(prev => [
+      ...prev,
+      new LogEntry(`✉️ event name: ${eventName} text: ${text}`)
+    ])
   });
   
   const [messageText, setMessageText] = useState<string>('A message')
