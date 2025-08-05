@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { FiMenu, FiMessageSquare, FiUsers, FiSettings } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiMenu, FiMessageSquare, FiUsers, FiSettings, FiArrowLeft } from 'react-icons/fi';
 import ChatWindow from './ChatWindow';
 import ConversationList from './ConversationList';
 
@@ -18,13 +18,31 @@ export default function ChatLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'conversations' | 'users'>('conversations');
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-
-  // Mock data - replace with real data from your API
-  const conversations: User[] = [
+  const [conversations, setConversations] = useState<User[]>([
     { id: '1', name: 'John Doe', lastMessage: 'Hey, how are you?', time: '10:30 AM', unread: 2 },
     { id: '2', name: 'Jane Smith', lastMessage: 'Meeting at 3 PM', time: 'Yesterday' },
     { id: '3', name: 'Team Group', lastMessage: 'Alice: I finished the design', time: 'Yesterday' },
-  ];
+  ]);
+
+  // Auto-close sidebar on mobile when a conversation is selected
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) { // md breakpoint
+        setIsSidebarOpen(true);
+      } else if (selectedConversation) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, [selectedConversation]);
 
   const users: User[] = [
     { id: '4', name: 'Alex Johnson' },
@@ -34,17 +52,19 @@ export default function ChatLayout() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
+      {/* Sidebar - Hidden on mobile when chat is open */}
       <div 
-        className={`${isSidebarOpen ? 'w-80' : 'w-16'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}
+        className={`${isSidebarOpen ? 'w-72 xl:w-80' : 'w-0 xl:w-20'} 
+        bg-white border-r border-gray-200 flex flex-col transition-all duration-300 
+        fixed xl:relative z-10 h-full ${!isSidebarOpen ? 'invisible xl:visible' : ''}`}
       >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           {isSidebarOpen ? (
             <h2 className="text-xl font-semibold">Messages</h2>
           ) : (
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
-              <FiMessageSquare size={18} />
+            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white xl:mx-auto">
+              <FiMessageSquare size={20} />
             </div>
           )}
           <button 
@@ -126,24 +146,48 @@ export default function ChatLayout() {
         </div>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Content - Full width on mobile when sidebar is hidden */}
+      <div className={`flex-1 flex flex-col overflow-hidden h-full ${isSidebarOpen ? 'hidden xl:flex' : 'flex'}`}>
+        <div className="w-full h-full flex flex-col">
         {selectedConversation ? (
-          <ChatWindow 
-            conversationId={selectedConversation}
-            onBack={() => setSelectedConversation(null)}
-          />
+          <>
+            {/* Mobile header with back button */}
+            <div className="md:hidden p-3 border-b border-gray-200 bg-white flex items-center">
+              <button 
+                onClick={() => setSelectedConversation(null)}
+                className="p-1 mr-2 text-gray-500 hover:text-gray-700"
+              >
+                <FiArrowLeft size={20} />
+              </button>
+              <h3 className="font-medium">
+                {conversations.find(c => c.id === selectedConversation)?.name || 'Chat'}
+              </h3>
+            </div>
+            <ChatWindow 
+              conversationId={selectedConversation} 
+              onBack={() => setSelectedConversation(null)} 
+            />
+          </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
-            <div className="text-center p-6 max-w-md">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiMessageSquare className="text-blue-500" size={28} />
+          <div className="flex-1 flex items-center justify-center bg-gray-50 w-full">
+            <div className="text-center p-6 w-full max-w-4xl">
+              <div className="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                <FiMessageSquare className="text-blue-600 text-4xl" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">Select a conversation</h3>
-              <p className="text-gray-500">Choose an existing conversation or start a new one</p>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Nessuna conversazione selezionata</h3>
+              <p className="text-gray-600 text-lg">Seleziona una conversazione esistente o iniziane una nuova</p>
+              
+              {/* Show conversations button on mobile */}
+              <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="mt-4 md:hidden px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Show Conversations
+              </button>
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

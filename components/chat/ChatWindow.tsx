@@ -25,10 +25,10 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
     const handleNewMessage = (newMessage: ChatMessage) => {
       setMessages(prev => [...prev, newMessage]);
     };
-    
+
     // Subscribe to new messages
     const unsubscribe = chatService.subscribe(handleNewMessage);
-    
+
     // Load initial messages
     const loadInitialMessages = async () => {
       try {
@@ -48,15 +48,14 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
             status: 'read'
           }
         ];
-        
         setMessages(initialMessages);
       } catch (error) {
         console.error('Error loading messages:', error);
       }
     };
-    
+
     loadInitialMessages();
-    
+
     // Clean up subscription on unmount
     return () => {
       if (unsubscribe) unsubscribe();
@@ -72,8 +71,6 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
       setSelectedFiles(prev => [...prev, ...filesArray]);
-      
-      // Create preview URLs
       const newPreviews = filesArray.map(file => URL.createObjectURL(file));
       setPreviewUrls(prev => [...prev, ...newPreviews]);
     }
@@ -86,11 +83,8 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Don't send if there's no text or files
     if (message.trim() === '' && selectedFiles.length === 0) return;
-    
-    // Create media files array from selected files
+
     const mediaFiles: MediaFile[] = selectedFiles.map((file, index) => ({
       url: previewUrls[index],
       type: file.type.startsWith('image/') ? 'image' : 
@@ -107,24 +101,21 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'sent'
     };
-    
-    // Add message to local list immediately for instant feedback
+
     setMessages(prev => [...prev, messageToSend]);
     setMessage('');
     setSelectedFiles([]);
     setPreviewUrls([]);
-    
+
     try {
-      // Send message through chat service
       const success = await chatService.sendMessage({
         text: messageToSend.text,
         media: messageToSend.media,
         sender: messageToSend.sender,
         time: messageToSend.time
       });
-      
+
       if (!success) {
-        // Handle send error
         setMessages(prev => 
           prev.map(msg => 
             msg.id === messageToSend.id 
@@ -160,7 +151,7 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <div className="bg-white p-4 shadow-sm flex items-center">
         <button 
@@ -174,134 +165,148 @@ export default function ChatWindow({ conversationId, onBack }: ChatWindowProps) 
           <p className="text-xs text-gray-500">Online</p>
         </div>
       </div>
-      
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <div 
-            key={msg.id} 
-            className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-          >
+      <div className="flex-1 overflow-y-auto p-4 w-full">
+        <div className="w-full space-y-4">
+          {messages.map((msg) => (
             <div 
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                msg.sender === 'me' 
-                  ? 'bg-blue-500 text-white rounded-br-none' 
-                  : 'bg-white text-gray-800 rounded-bl-none shadow'
-              }`}
+              key={msg.id} 
+              className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
             >
-              {msg.text && <p className="whitespace-pre-wrap">{msg.text}</p>}
-              
-              {msg.media && msg.media.map((media, mediaIndex) => (
-                <div key={`${msg.id}-media-${mediaIndex}`} className="mt-2">
-                  {media.type === 'image' ? (
-                    <div className="relative w-full h-48 md:h-64 rounded overflow-hidden">
-                      <Image
-                        key={`${msg.id}-img-${mediaIndex}`}
-                        src={media.url}
-                        alt={media.name || 'Image'}
-                        fill
-                        className="object-cover cursor-pointer"
-                        onClick={() => window.open(media.url, '_blank')}
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        unoptimized={!media.url.startsWith('/')}
+              <div 
+                className={`min-w-[30rem] max-w-3xl px-6 py-4 rounded-2xl text-base ${
+                  msg.sender === 'me' 
+                    ? 'bg-blue-500 text-white rounded-br-none' 
+                    : 'bg-white text-gray-800 rounded-bl-none shadow'
+                }`}
+              >
+                {msg.text && <p className="whitespace-pre-wrap text-base">{msg.text}</p>}
+                {msg.media && msg.media.map((media, mediaIndex) => (
+                  <div key={`${msg.id}-media-${mediaIndex}`} className="mt-3">
+                    {media.type === 'image' ? (
+                      <div className="relative w-full h-64 lg:h-80 rounded-xl overflow-hidden">
+                        <Image
+                          key={`${msg.id}-img-${mediaIndex}`}
+                          src={media.url}
+                          alt={media.name || 'Image'}
+                          fill
+                          className="object-cover"
+                          unoptimized={!media.url.startsWith('/')}
+                        />
+                      </div>
+                    ) : media.type === 'video' ? (
+                      <video 
+                        src={media.url} 
+                        controls 
+                        className="w-full max-h-96 rounded-lg"
                       />
-                    </div>
-                  ) : media.type === 'video' ? (
-                    <video 
-                      key={`${msg.id}-video-${mediaIndex}`}
-                      src={media.url} 
-                      controls 
-                      className="max-w-full h-auto rounded"
-                    />
-                  ) : (
-                    <a 
-                      key={`${msg.id}-doc-${mediaIndex}`}
-                      href={media.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline flex items-center"
-                    >
-                      <FiPaperclip className="mr-1" />
-                      {media.name || 'Document'}
-                    </a>
+                    ) : (
+                      <a 
+                        href={media.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center p-3 bg-gray-100 rounded-lg hover:bg-gray-200"
+                      >
+                        <svg className="w-8 h-8 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="truncate max-w-xs">
+                          {media.name || 'Document'}
+                          {media.size && ` (${(media.size / 1024).toFixed(1)} KB)`}
+                        </span>
+                      </a>
+                    )}
+                  </div>
+                ))}
+                <div className="flex justify-end items-center mt-1">
+                  <span className="text-xs opacity-70">
+                    {msg.time}
+                  </span>
+                  {msg.sender === 'me' && (
+                    <span className="ml-1">
+                      {getStatusIcon(msg.status)}
+                    </span>
                   )}
                 </div>
-              ))}
-              
-              <div className="flex items-center justify-end mt-1 space-x-1 text-xs opacity-75">
-                <span>{msg.time}</span>
-                {msg.sender === 'me' && (
-                  <span className="ml-1">
-                    {getStatusIcon(msg.status)}
-                  </span>
-                )}
               </div>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      
-      {/* File previews */}
-      {previewUrls.length > 0 && (
-        <div className="px-4 py-2 bg-white border-t flex overflow-x-auto space-x-2">
-              {previewUrls.map((url, index) => (
-                <div key={`preview-${index}`} className="relative inline-block m-1">
-              <img 
-                src={url} 
-                alt={`Preview ${index}`} 
-                className="h-16 w-16 object-cover rounded"
-              />
-              <button 
-                onClick={() => removeFile(index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-              >
-                ×
-              </button>
             </div>
           ))}
         </div>
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* File previews */}
+      {previewUrls.length > 0 && (
+        <div className="px-4 py-2 bg-white border-t border-gray-200">
+          <div className="flex overflow-x-auto space-x-2 w-full">
+            {previewUrls.map((url, index) => (
+              <div key={`preview-${index}`} className="relative inline-block m-1">
+                <img 
+                  src={url} 
+                  alt={`Preview ${index + 1}`}
+                  className="h-20 w-20 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
-      
+
       {/* Message input */}
-      <div className="bg-white border-t p-4">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
-          <button 
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-500 hover:text-gray-700"
-          >
-            <FiPaperclip size={20} />
-          </button>
-          
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            multiple
-          />
-          
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 border rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          
-          <button 
-            type="submit"
-            disabled={message.trim() === '' && selectedFiles.length === 0}
-            className={`p-2 rounded-full ${
-              message.trim() || selectedFiles.length > 0
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            <FiSend size={20} />
-          </button>
-        </form>
+      <div className="bg-white border-t border-gray-200 p-4">
+        <div className="w-full">
+          <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-gray-500 hover:text-gray-700"
+            >
+              <FiPaperclip size={20} />
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              multiple
+              accept="image/*,video/*,.pdf,.doc,.docx"
+            />
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type a message..."
+                className="w-full px-4 py-2 pr-10 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button 
+                type="button"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <FiSmile size={20} />
+              </button>
+            </div>
+            <button
+              type="submit"
+              disabled={!message.trim() && selectedFiles.length === 0}
+              className={`p-2 rounded-full ${
+                message.trim() || selectedFiles.length > 0
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <FiSend size={20} />
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
