@@ -17,31 +17,23 @@ export default function Authentication() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsAuthenticated(true);
-        // Initialize Ably client with auth callback
-        const ablyClient = new Ably.Realtime({
-          authUrl: '/api/token',
-          authMethod: 'POST',
-          authHeaders: {
-            'Content-Type': 'application/json',
-          },
-          authParams: {
-            timestamp: Date.now().toString()
-          }
-        });
+    const initializeAbly = async () => {
+      const ablyClient = new Ably.Realtime({
+        authUrl: '/api/token',
+        authMethod: 'POST',
+        authHeaders: {
+          'Content-Type': 'application/json',
+        },
+        authParams: {
+          timestamp: Date.now().toString()
+        }
+      });
 
-        setClient(ablyClient);
-      } else {
-        // Redirect to login if not authenticated
-        router.push('/login');
-      }
+      setClient(ablyClient);
+      setIsAuthenticated(true);
     };
 
-    checkAuth();
+    initializeAbly();
 
     // Cleanup function
     return () => {
@@ -49,9 +41,9 @@ export default function Authentication() {
         client.connection.close();
       }
     };
-  }, [router]);
+  }, []);
 
-  if (!isAuthenticated || !client) {
+  if (!client) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
