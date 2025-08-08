@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     if (!process.env.ABLY_API_KEY) {
       throw new Error('Missing ABLY_API_KEY environment variable');

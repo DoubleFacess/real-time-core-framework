@@ -1,14 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import Ably from 'ably';
+import { Realtime } from 'ably';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const ablyApiKey = process.env.ABLY_API_KEY || '';
+type ConnectionStateChange = {
+  current: string;
+  previous: string;
+  reason?: {
+    message: string;
+  };
+};
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Check for required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const ablyApiKey = process.env.ABLY_API_KEY;
 
-// Disabilita la cache per questa route
+if (!supabaseUrl || !supabaseAnonKey || !ablyApiKey) {
+  throw new Error('Missing required environment variables. Please check your .env.local file.');
+}
+
+// Initialize Supabase client with anon key since we're only reading public data
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Disable cache for this route
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
@@ -17,46 +31,76 @@ export async function POST(request: Request) {
 
     if (!userId || !userName || !userEmail) {
       return NextResponse.json(
-        { error: 'Dati mancanti' },
+        { error: 'Missing required fields: userId, userName, and userEmail are required' },
         { status: 400 }
       );
     }
 
-    // Inizializza il client Ably
-    const client = new Ably.Realtime(ablyApiKey);
-    
-    // Crea un canale per le notifiche di connessione
-    const channel = client.channels.get('user-connections');
-    
-    // Pubblica un messaggio di connessione
-    await channel.publish('user-connected', {
-      userId,
-      userName,
-      userEmail,
-      timestamp: new Date().toISOString(),
-      status: 'connected'
-    });
-
-    // Aggiorna lo stato dell'utente nel database
-    const { error } = await supabase
-      .from('user_status')
-      .upsert({
-        id: userId,
-        name: userName,
-        email: userEmail,
-        is_online: true,
-        last_seen: new Date().toISOString()
-      });
-
-    if (error) {
-      console.error('Errore aggiornamento stato utente:', error);
+    // Initialize Ably client with proper TypeScript types
+    if (!ablyApiKey) {
+      throw new Error('ABLY_API_KEY is not defined');
     }
+    
+    const ably = new Realtime(ablyApiKey);
+    
+    try {
+      // Wait for connection to be established
+      await new Promise<void>((resolve, reject) => {
+        ably.connection.once('connected', () => resolve());
+        ably.connection.once('failed', (stateChange: ConnectionStateChange) => {
+          reject(new Error(`Connection failed: ${stateChange.reason?.message || 'Unknown error'}`));
+        });
+      });
+      
+      // Get the channel for connection notifications
+      const channel = ably.channels.get('user-connections');
+      
+      // Publish connection message
+      const message = {
+        userId,
+        userName,
+        userEmail,
+        timestamp: new Date().toISOString(),
+        status: 'connected' as const
+      };
+      
+      await channel.publish('user-connected', message);
 
-    return NextResponse.json({ success: true });
+      // Update user status in the database
+      const { error } = await supabase
+        .from('user_status')
+        .upsert({
+          id: userId,
+          name: userName,
+          email: userEmail,
+          is_online: true,
+          last_seen: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating user status:', error);
+        // Don't fail the request if the status update fails
+      }
+
+      return NextResponse.json({ 
+        success: true,
+        message: 'Connection notification sent successfully'
+      });
+      
+    } catch (ablyError) {
+      console.error('Ably error:', ablyError);
+      return NextResponse.json(
+        { error: 'Failed to send notification' },
+        { status: 500 }
+      );
+    } finally {
+      // Close the Ably connection
+      ably.close();
+    }
   } catch (error) {
-    console.error('Errore notifica connessione:', error);
+    console.error('Error in notify-connection:', error);
     return NextResponse.json(
-      { error: 'Errore durante la notifica di connessione' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
